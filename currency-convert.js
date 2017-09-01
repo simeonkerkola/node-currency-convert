@@ -1,27 +1,25 @@
 const axios = require('axios')
 
-const fixerUrl = 'http://api.fixer.io/latest?base='
-const countriesUrl = 'https://restcountries.eu/rest/v2/currency/'
+const getExchangeRate = async (from, to) => {
+  try {
+    const response = await axios.get(`http://api.fixer.io/latest?base=${from}`)
+    const rate = response.data.rates[to]
 
-const getExchangeRate = (from, to) => axios.get(fixerUrl + from)
-  .then(response => response.data.rates[to])
+    if (rate) return rate
+    throw new Error()
+  } catch (e) {
+    throw new Error(`Unable to get exchange rate for ${from} ${to}`)
+  }
+}
 
-const getCountries = currencyCode => axios.get(countriesUrl + currencyCode)
-  .then(response => response.data.map(country => country.name))
-
-// const convertCurrency = (from, to, amount) => {
-//   let countries
-//
-//   return getCountries(to).then((tempCountries) => {
-//     countries = tempCountries
-//     return getExchangeRate(from, to)
-//   }).then((rate) => {
-//     const exchangedAmount = amount * rate
-//
-//     return `${amount} ${from} = ${exchangedAmount} ${to}.
-//     ${to} can be used in: ${countries.join(', ')}`
-//   })
-// }
+const getCountries = async (currencyCode) => {
+  try {
+    const response = await axios.get(`https://restcountries.eu/rest/v2/currency/${currencyCode}`)
+    return response.data.map(country => country.name)
+  } catch (e) {
+    throw new Error(`Unable to get any data on currency code '${currencyCode}'`)
+  }
+}
 
 // Create convertCurrencyAlt async function
 const convertCurrencyAlt = async (from, to, amount) => {
@@ -32,8 +30,8 @@ const convertCurrencyAlt = async (from, to, amount) => {
   return `${amount} ${from} = ${exchangedAmount} ${to}.\n${to} can be used in: ${countries.join(', ')}`
 }
 
-convertCurrencyAlt('EUR', 'JPY', 2).then(status => console.log(status))
+convertCurrencyAlt('EUR', 'JPY', 1).then(status => console.log(status))
+  .catch(e => console.log(e.message))
 
-// convertCurrency('USD', 'INR', 100).then(status => console.log(status))
 // getExchangeRate('USD', 'EUR').then(rate => console.log(rate))
 // getCountries('CAD').then(countries => console.log(countries))
